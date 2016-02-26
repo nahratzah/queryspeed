@@ -56,7 +56,7 @@ func main() {
 		if r.err != nil {
 			fmt.Fprintf(os.Stderr, "Error for %s: %v\n", r.url, r.err)
 		} else {
-			fmt.Printf("%s: \u0394T(request) = %v; \u0394T(request+read body) = %v\n", r.url, r.deltaTime, r.readDeltaTime)
+			fmt.Printf("%s: \u0394T(request) = %v; \u0394T(request+read body) = %v; HTTP Response code = %d\n", r.url, r.deltaTime, r.readDeltaTime, r.statusCode)
 		}
 	}
 }
