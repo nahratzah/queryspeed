@@ -16,7 +16,7 @@ func measureGet(client *http.Client, url string) (statusCode int, deltaTime, rea
 	}
 
 	t0 := time.Now()
-	resp, err := http.Get(url)
+	resp, err := client.Get(url)
 	deltaTime = time.Since(t0)
 	if err != nil {
 		return 0, 0, 0, err
@@ -41,18 +41,22 @@ func main() {
 	var client http.Client
 
 	var waiter sync.WaitGroup
-	results := make([]measurement, len(os.Args)-1)
-	for i := range results {
-		results[i].url = os.Args[1+i]
-		go func(i int, url string) {
+	results := make(chan measurement)
+	for _, url := range os.Args[1:] {
+		go func(url string) {
 			defer waiter.Done()
-			results[i].statusCode, results[i].deltaTime, results[i].readDeltaTime, results[i].err = measureGet(&client, url)
-		}(i, os.Args[1+i])
+			m := measurement{url: url}
+			m.statusCode, m.deltaTime, m.readDeltaTime, m.err = measureGet(&client, url)
+			results <- m
+		}(url)
 		waiter.Add(1)
 	}
-	waiter.Wait()
+	go func() {
+		defer close(results)
+		waiter.Wait()
+	}()
 
-	for _, r := range results {
+	for r := range results {
 		if r.err != nil {
 			fmt.Fprintf(os.Stderr, "Error for %s: %v\n", r.url, r.err)
 		} else {
