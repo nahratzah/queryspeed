@@ -44,10 +44,10 @@ func main() {
 	results := make([]measurement, len(os.Args)-1)
 	for i := range results {
 		results[i].url = os.Args[1+i]
-		go func(url string) {
+		go func(i int, url string) {
 			defer waiter.Done()
 			results[i].statusCode, results[i].deltaTime, results[i].readDeltaTime, results[i].err = measureGet(&client, url)
-		}(os.Args[1+i])
+		}(i, os.Args[1+i])
 		waiter.Add(1)
 	}
 	waiter.Wait()
