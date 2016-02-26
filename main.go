@@ -40,12 +40,12 @@ func main() {
 	}
 	var client http.Client
 
-	var waiter sync.WaitGroup
+	var wg sync.WaitGroup
 	results := make(chan measurement)
 	for _, url := range os.Args[1:] {
-		waiter.Add(1)
+		wg.Add(1)
 		go func(url string) {
-			defer waiter.Done()
+			defer wg.Done()
 			m := measurement{url: url}
 			m.statusCode, m.deltaTime, m.readDeltaTime, m.err = measureGet(&client, url)
 			results <- m
@@ -53,7 +53,7 @@ func main() {
 	}
 	go func() {
 		defer close(results)
-		waiter.Wait()
+		wg.Wait()
 	}()
 
 	for r := range results {
